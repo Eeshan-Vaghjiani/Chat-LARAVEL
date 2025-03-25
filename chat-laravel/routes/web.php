@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\PusherController;
 
 /*
 |--------------------------------------------------------------------------
@@ -13,16 +14,17 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', 'App\Http\Controllers\PusherController@index');
-Route::post('/broadcast', 'App\Http\Controllers\PusherController@broadcast');
-Route::post('/receive', 'App\Http\Controllers\PusherController@receive');
-
 Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
     'verified',
 ])->group(function () {
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [PusherController::class, 'index'])->name('dashboard');
+    Route::post('/broadcast', [PusherController::class, 'broadcast']);
+    Route::post('/receive', [PusherController::class    , 'receive']);
 });
+
+// Redirect unauthenticated users to login
+Route::get('/', function () {
+    return redirect('/login');
+})->middleware('guest');

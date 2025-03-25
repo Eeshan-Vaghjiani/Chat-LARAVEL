@@ -185,6 +185,9 @@ return [
         /*
          * Package Service Providers...
          */
+        Laravel\Fortify\FortifyServiceProvider::class,
+        App\Providers\FortifyServiceProvider::class,
+        Laravel\Jetstream\JetstreamServiceProvider::class,
 
         /*
          * Application Service Providers...

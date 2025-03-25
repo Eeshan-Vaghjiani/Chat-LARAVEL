@@ -3,6 +3,11 @@
 <head>
     <title>Chat Laravel | {{ config('app.name') }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
     <!-- JavaScript -->
     <script src="https://js.pusher.com/7.2/pusher.min.js"></script>
@@ -11,14 +16,24 @@
 
     <!-- CSS -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @livewireStyles
     <style>
+        body {
+            overflow: hidden;
+        }
+
         .chat {
             max-width: 1200px;
-            margin: 20px auto;
             background: #fff;
             border-radius: 15px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
             overflow: hidden;
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 40px);
+            height: calc(100vh - 180px);
         }
 
         .top {
@@ -28,6 +43,11 @@
             display: flex;
             align-items: center;
             gap: 1rem;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1;
         }
 
         .top img {
@@ -40,7 +60,8 @@
 
         .messages {
             padding: 1rem;
-            height: calc(100vh - 200px);
+            height: calc(100% - 140px);
+            margin-top: 70px;
             overflow-y: auto;
             background: #F3F4F6;
         }
@@ -92,6 +113,10 @@
             padding: 1rem;
             background: white;
             border-top: 1px solid #E5E7EB;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
         }
 
         .bottom form {
@@ -135,118 +160,127 @@
     </style>
 </head>
 
-<body class="bg-gray-100">
-    <div class="chat">
-        <!-- Header -->
-        <div class="top">
-            <img src="{{ Auth::user()->profile_photo_url }}" alt="Avatar">
-            <div>
-                <p class="font-semibold">{{ Auth::user()->name }}</p>
-                <small>Online</small>
-            </div>
-        </div>
-        <!-- End Header -->
+<body class="font-sans antialiased">
+    <x-banner />
 
-        <!-- Chat -->
-        <div class="messages">
-            @if(isset($messages) && $messages->count() > 0)
-                @foreach($messages as $message)
-                    @if($message->user_id === Auth::id())
-                        <div class="message sent">
-                            <div class="message-content">
-                                {{ $message->message }}
-                            </div>
-                            <div class="message-meta">
-                                {{ $message->user->name }} • {{ $message->created_at->diffForHumans() }}
-                            </div>
-                        </div>
-                    @else
-                        <div class="message received">
-                            <div class="message-content">
-                                <img src="{{ $message->user->profile_photo_url }}" alt="Avatar" class="user-avatar">
-                                {{ $message->message }}
-                            </div>
-                            <div class="message-meta">
-                                {{ $message->user->name }} • {{ $message->created_at->diffForHumans() }}
-                            </div>
-                        </div>
-                    @endif
-                @endforeach
-            @else
-                <div class="message received">
-                    <div class="message-content">
-                        Welcome to the chat! 👋
-                    </div>
+    <div class="min-h-screen bg-gray-100">
+        @livewire('navigation-menu')
+
+        <div class="chat">
+            <!-- Header -->
+            <div class="top">
+                <img src="{{ Auth::user()->profile_photo_url }}" alt="Avatar">
+                <div>
+                    <p class="font-semibold">{{ Auth::user()->name }}</p>
+                    <small>Online</small>
                 </div>
-            @endif
-        </div>
-        <!-- End Chat -->
+            </div>
+            <!-- End Header -->
 
-        <!-- Footer -->
-        <div class="bottom">
-            <form>
-                <input type="text" id="message" name="message" placeholder="Type your message..." autocomplete="off">
-                <button type="submit">Send</button>
-            </form>
+            <!-- Chat -->
+            <div class="messages">
+                @if(isset($messages) && $messages->count() > 0)
+                    @foreach($messages as $message)
+                        @if($message->user_id === Auth::id())
+                            <div class="message sent">
+                                <div class="message-content">
+                                    {{ $message->message }}
+                                </div>
+                                <div class="message-meta">
+                                    {{ $message->user->name }} • {{ $message->created_at->diffForHumans() }}
+                                </div>
+                            </div>
+                        @else
+                            <div class="message received">
+                                <div class="message-content">
+                                    <img src="{{ $message->user->profile_photo_url }}" alt="Avatar" class="user-avatar">
+                                    {{ $message->message }}
+                                </div>
+                                <div class="message-meta">
+                                    {{ $message->user->name }} • {{ $message->created_at->diffForHumans() }}
+                                </div>
+                            </div>
+                        @endif
+                    @endforeach
+                @else
+                    <div class="message received">
+                        <div class="message-content">
+                            Welcome to the chat! 👋
+                        </div>
+                    </div>
+                @endif
+            </div>
+            <!-- End Chat -->
+
+            <!-- Footer -->
+            <div class="bottom">
+                <form>
+                    <input type="text" id="message" name="message" placeholder="Type your message..." autocomplete="off">
+                    <button type="submit">Send</button>
+                </form>
+            </div>
+            <!-- End Footer -->
         </div>
-        <!-- End Footer -->
     </div>
-</body>
 
-<script>
-    const pusher = new Pusher('{{config('broadcasting.connections.pusher.key')}}', {
-        cluster: 'eu'
-    });
-    const channel = pusher.subscribe('public');
+    @stack('modals')
+    @livewireScripts
 
-    // Scroll to bottom on load
-    $(document).ready(function() {
-        scrollToBottom();
-    });
+    <script>
+        const pusher = new Pusher('{{config('broadcasting.connections.pusher.key')}}', {
+            cluster: 'eu'
+        });
+        const channel = pusher.subscribe('public');
 
-    // Scroll to bottom function
-    function scrollToBottom() {
-        const messages = $('.messages');
-        messages.scrollTop(messages[0].scrollHeight);
-    }
-
-    // Receive messages
-    channel.bind('chat', function(data) {
-        $.post("/receive", {
-            _token: '{{csrf_token()}}',
-            message: data.message,
-            user: data.user
-        })
-        .done(function(res) {
-            $(".messages").append(res);
+        // Scroll to bottom on load
+        $(document).ready(function() {
             scrollToBottom();
         });
-    });
 
-    // Broadcast messages
-    $("form").submit(function(event) {
-        event.preventDefault();
+        // Scroll to bottom function
+        function scrollToBottom() {
+            const messages = $('.messages');
+            messages.scrollTop(messages[0].scrollHeight);
+        }
 
-        const messageInput = $("form #message");
-        const message = messageInput.val();
-
-        if (!message) return;
-
-        $.ajax({
-            url: "/broadcast",
-            method: 'POST',
-            headers: {
-                'X-Socket-Id': pusher.connection.socket_id
-            },
-            data: {
+        // Receive messages
+        channel.bind('chat', function(data) {
+            $.post("/receive", {
                 _token: '{{csrf_token()}}',
-                message: message
-            }
-        }).done(function(res) {
-            $(".messages").append(res);
-            messageInput.val('');
-            scrollToBottom();
+                message: data.message,
+                user: data.user
+            })
+            .done(function(res) {
+                $(".messages").append(res);
+                scrollToBottom();
+            });
         });
-    });
-</script>
+
+        // Broadcast messages
+        $("form").submit(function(event) {
+            event.preventDefault();
+
+            const messageInput = $("form #message");
+            const message = messageInput.val();
+
+            if (!message) return;
+
+            $.ajax({
+                url: "/broadcast",
+                method: 'POST',
+                headers: {
+                    'X-Socket-Id': pusher.connection.socket_id
+                },
+                data: {
+                    _token: '{{csrf_token()}}',
+                    message: message
+                }
+            }).done(function(res) {
+                $(".messages").append(res);
+                messageInput.val('');
+                scrollToBottom();
+            });
+        });
+    </script>
+</body>
 </html>
