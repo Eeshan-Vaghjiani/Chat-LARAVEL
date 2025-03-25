@@ -1,4 +1,9 @@
-<div class="left message">
-  <img src="https://assets.edlin.app/images/rossedlin/03/rossedlin-03-100.jpg" alt="Avatar">
-  <p>{{$message}}</p>
+<div class="message received">
+    <div class="message-content">
+        <img src="{{ $user->profile_photo_url }}" alt="Avatar" class="user-avatar">
+        {{ $message }}
+    </div>
+    <div class="message-meta">
+        {{ $user->name }} • Just now
+    </div>
 </div>
