@@ -31,8 +31,16 @@
 
   <!-- Chat -->
   <div class="messages">
-    @include('receive', ['message' => "Hey! What's up!  👋"])
-    @include('receive', ['message' => "Ask a friend to open this link and you can chat with them!"])
+    @if(isset($messages) && $messages->count() > 0)
+      @foreach($messages as $message)
+        @if($message->sender_type === 'system')
+          @include('receive', ['message' => $message->message])
+        @else
+          @include('broadcast', ['message' => $message->message])
+        @endif
+      @endforeach
+
+    @endif
   </div>
   <!-- End Chat -->
 
