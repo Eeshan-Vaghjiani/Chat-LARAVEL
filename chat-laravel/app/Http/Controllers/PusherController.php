@@ -76,4 +76,12 @@ class PusherController extends Controller
             'user' => $user
         ]);
     }
+
+    public function fetchMessages()
+    {
+        // Fetch the latest messages
+        $messages = Message::orderBy('created_at', 'desc')->take(50)->get(); // Adjust the number as needed
+
+        return response()->json($messages);
+    }
 }

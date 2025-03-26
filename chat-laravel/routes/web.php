@@ -2,6 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PusherController;
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\ChatController;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,7 +27,33 @@ Route::middleware([
     Route::post('/receive', [PusherController::class    , 'receive']);
 });
 
-// Redirect unauthenticated users to login
+// Chat homepage route
 Route::get('/', function () {
-    return redirect('/login');
-})->middleware('guest');
+    return view('home'); // If you keep the file as home.blade.php
+})->name('chat.home');
+
+// Authentication routes
+Route::get('/login', [AuthenticatedSessionController::class, 'create'])
+    ->middleware('guest')
+    ->name('login');
+
+Route::post('/login', [AuthenticatedSessionController::class, 'store'])
+    ->middleware('guest');
+
+Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
+    ->middleware('auth')
+    ->name('logout');
+
+Route::get('/register', [RegisteredUserController::class, 'create'])
+    ->middleware('guest')
+    ->name('register');
+
+Route::post('/register', [RegisteredUserController::class, 'store'])
+    ->middleware('guest');
+
+// Protected chat route
+Route::get('/chat', function () {
+    // Your chat logic here
+})->middleware('auth')->name('chat');
+
+Route::get('/fetch-messages', [ChatController::class, 'fetchMessages'])->name('fetch.messages');
